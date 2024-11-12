@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function Soal3() {
   /**
@@ -11,27 +11,53 @@ export default function Soal3() {
 
 function SeachComponent() {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<IApiResponse[]>([]);
+
+  const onSearchData = useMemo(() => {
+    return results.filter((result) => {
+      return result.title.toLowerCase().includes(search.toLowerCase());
+    });
+  }, [results, search]);
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetch(`https://jsonplaceholder.typicode.com/photos/${search.id}`);
-      const data = await response.json();
-
+      const response: Response = await fetch(
+        `https://jsonplaceholder.typicode.com/photos/`
+      );
+      const data: IApiResponse[] = await response.json();
       setResults(data);
     }
 
-    if (search) fetchData();
-  }, [search]);
+    fetchData();
+  }, []);
 
   return (
     <div>
-      <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." />
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search..."
+      />
       <ul>
-        {results.map((result) => (
-          <li key={result.id}>{result.name}</li>
-        ))}
+        {onSearchData.length ? (
+          onSearchData.map((result) => (
+            <li style={{ color: "white" }} key={result.id}>
+              {result.title}
+            </li>
+          ))
+        ) : (
+          <li style={{ color: "white" }}>Please wait...</li>
+        )}
       </ul>
     </div>
   );
+}
+
+interface IApiResponse {
+  albumId: number;
+  id: number;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
 }
