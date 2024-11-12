@@ -1,9 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 
 const Soal5 = () => {
-  // 5. buatlah fungsi untuk menutup modal ketika tombol back browser diklik
   const [openModal, setOpenModal] = useState<boolean>(false);
+
+  // Function to handle the back button
+  const handleBackButton = useCallback(() => {
+    if (openModal) {
+      setOpenModal(false);
+    }
+  }, [openModal]);
+
+  useEffect(() => {
+    // Listen for popstate event
+    window.addEventListener("popstate", handleBackButton);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
+  }, [handleBackButton, openModal]);
+
+  const toggleModal = () => {
+    setOpenModal((prev) => !prev);
+    // Push a new state to the history stack when opening the modal
+    if (!openModal) {
+      window.history.pushState({}, "");
+    } else {
+      // If closing the modal, go back to the previous state
+      window.history.back();
+    }
+  };
 
   return (
     <>
@@ -11,9 +38,7 @@ const Soal5 = () => {
         {openModal && <Modal />}
         <button
           style={{ padding: "2px 4px", background: "white" }}
-          onClick={() => {
-            setOpenModal((prev) => !prev);
-          }}
+          onClick={toggleModal}
         >
           {openModal ? "close" : "open"} modal
         </button>
@@ -38,7 +63,14 @@ const Modal = () => {
 
   if (!modalRoot) return <></>;
   return ReactDOM.createPortal(
-    <section style={{ background: "#8f9cb0", padding: "3rem", position: "fixed", margin: "6rem" }}>
+    <section
+      style={{
+        background: "#8f9cb0",
+        padding: "3rem",
+        position: "fixed",
+        margin: "6rem",
+      }}
+    >
       <div>This is modal</div>
     </section>,
     modalRoot
